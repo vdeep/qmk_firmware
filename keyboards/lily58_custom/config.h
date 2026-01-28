@@ -7,16 +7,10 @@
 #define RP2040_BOOTLOADER_DOUBLE_TAP_RESET
 #define RP2040_BOOTLOADER_DOUBLE_TAP_RESET_TIMEOUT 500U
 
-// I2C configuration for OLED
+// I2C configuration for OLED (D1=GP2, D0=GP3 on Pro Micro footprint)
 #define I2C_DRIVER I2CD1
 #define I2C1_SDA_PIN GP2
 #define I2C1_SCL_PIN GP3
-
-// Serial configuration for split communication (full-duplex UART)
-// Requires crossover wiring: Left GP0 <-> Right GP1, Left GP1 <-> Right GP0
-#define SERIAL_USART_FULL_DUPLEX
-#define SERIAL_USART_TX_PIN GP0
-#define SERIAL_USART_RX_PIN GP1
 
 // OLED configuration
 #define OLED_DISPLAY_128X32
@@ -28,3 +22,6 @@
 
 // Encoder resolution
 #define ENCODER_RESOLUTION 4
+
+// Use the lily version to get the Lily58 logo instead of the qmk logo
+#define OLED_FONT_H "lib/glcdfont_lily.c"

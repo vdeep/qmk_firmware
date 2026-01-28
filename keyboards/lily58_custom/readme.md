@@ -1,66 +1,54 @@
 # Lily58 Custom RP2040
 
-A custom Lily58 split keyboard configuration using SparkFun Pro Micro RP2040 controllers.
+A Lily58 configuration for SparkFun Pro Micro RP2040 as a drop-in replacement for AVR Pro Micro.
 
 ## Features
 
-- **MCU**: SparkFun Pro Micro RP2040
-- **Split Communication**: Full-duplex UART (Serial)
+- **MCU**: SparkFun Pro Micro RP2040 (drop-in Pro Micro replacement)
+- **Split Communication**: Half-duplex serial (same as original Lily58)
 - **OLED Displays**: 128x32 I2C OLED on each half
-- **Rotary Encoders**: One per half (volume on left, page up/down on right)
+- **Rotary Encoders**: One per half (optional)
 - **Layout**: Standard Lily58 (58 keys total)
 
-## Pin Assignments
+## Pin Mapping (Pro Micro → RP2040)
 
-| Function   | Left Side | Right Side |
-|------------|-----------|------------|
-| Columns    | GP4, GP5, GP6, GP7, GP8, GP9 | GP9, GP8, GP7, GP6, GP5, GP4 |
-| Rows       | GP29, GP28, GP27, GP26, GP22 | GP22, GP26, GP27, GP28, GP29 |
-| Encoder A  | GP20      | GP20       |
-| Encoder B  | GP23      | GP23       |
-| I2C SDA    | GP2       | GP2        |
-| I2C SCL    | GP3       | GP3        |
-| Serial TX  | GP0       | GP0        |
-| Serial RX  | GP1       | GP1        |
+This configuration uses the standard Pro Micro footprint pin mapping:
+
+| Pro Micro Pin | RP2040 GPIO | Function |
+|---------------|-------------|----------|
+| D2 | GP1 | Split serial data |
+| D1 | GP2 | I2C SDA (OLED) |
+| D0 | GP3 | I2C SCL (OLED) |
+| D4 | GP4 | - |
+| C6 | GP5 | Row 0 |
+| D7 | GP6 | Row 1 |
+| E6 | GP7 | Row 2 |
+| B4 | GP8 | Row 3 |
+| B5 | GP9 | Row 4 |
+| B6 | GP21 | Column 5 |
+| B2 | GP23 | Column 4 |
+| B3 | GP20 | Column 3 |
+| B1 | GP22 | Column 2 |
+| F7 | GP26 | Column 1 |
+| F6 | GP27 | Column 0 |
+| F5 | GP28 | Encoder B (optional) |
+| F4 | GP29 | Encoder A (optional) |
 
 ## Wiring
 
-### Split Communication (CRITICAL)
+If your Lily58 PCB was designed for AVR Pro Micro, no rewiring is needed - the SparkFun Pro Micro RP2040 is a drop-in replacement with the same footprint.
 
-The serial connection between halves uses **crossover wiring**:
-
-```
-Left Half          Right Half
----------          ----------
-GP0 (TX) --------> GP1 (RX)
-GP1 (RX) <-------- GP0 (TX)
-GND      <-------> GND
-```
-
-**WARNING**: Incorrect wiring can damage the microcontrollers. Double-check before powering on:
-- TX connects to RX on the opposite side (crossover, not straight-through)
-- Both GND pins must be connected
+### Split Communication
+Uses half-duplex serial on D2 (GP1), same as original Lily58. Just connect the TRRS cable as usual.
 
 ### I2C for OLED
+- D1 (GP2) = SDA
+- D0 (GP3) = SCL
 
-Each half has its own OLED connected to I2C1:
-- GP2 (SDA) to OLED SDA
-- GP3 (SCL) to OLED SCL
-- 3.3V to OLED VCC
-- GND to OLED GND
-
-Most 128x32 OLEDs have built-in pull-up resistors. If your display doesn't work, you may need 4.7k pull-ups on SDA and SCL.
-
-### Encoders
-
-Connect rotary encoders to:
-- GP20 (Encoder A)
-- GP23 (Encoder B)
-- GND (Common)
-
-### Matrix
-
-Standard Lily58 matrix wiring with diodes in COL2ROW orientation.
+### Encoders (Optional)
+If your Lily58 has encoder support:
+- F4 (GP29) = Encoder A
+- F5 (GP28) = Encoder B
 
 ## Building Firmware
 
@@ -87,17 +75,14 @@ Standard QWERTY layout with modifiers.
 ### Lower
 - Function keys (F1-F12)
 - Numbers and symbols
-- Navigation
 
 ### Raise
-- Navigation cluster (arrows, page up/down, home/end)
-- Insert, Print Screen, Menu
-- Caps Lock toggle
-- Clipboard shortcuts (Undo, Cut, Copy, Paste)
+- Navigation (arrows, page up/down, home/end)
+- Clipboard shortcuts
 
 ### Adjust (Lower + Raise)
 - QK_BOOT for entering bootloader
-- Media controls (Volume, Play/Pause, Next/Previous)
+- Media controls
 
 ## Encoder Functions
 
@@ -107,20 +92,18 @@ Standard QWERTY layout with modifiers.
 ## OLED Display
 
 - **Master (left)**: Shows current layer, modifier status, and lock indicators
-- **Slave (right)**: Shows QMK logo
+- **Slave (right)**: Shows Lily58 logo
 
 ## Troubleshooting
 
-### Split communication not working
-1. Verify crossover wiring (TX to RX, RX to TX)
-2. Check GND connection between halves
-3. Ensure both halves have the same firmware
+### Keys not registering
+- Verify your PCB is wired for standard Lily58 rev1 pinout
+- Check diode orientation
 
 ### OLED not displaying
-1. Check I2C wiring (SDA to GP2, SCL to GP3)
-2. Verify OLED is 3.3V compatible
-3. Try adding 4.7k pull-up resistors if not built into OLED
+- Ensure OLED is connected to D1 (SDA) and D0 (SCL)
+- Most 128x32 OLEDs have built-in pull-ups
 
-### Keys not registering
-1. Check diode orientation (cathode/band toward row pin)
-2. Verify column and row wiring matches pin assignments
+### Split not working
+- Check TRRS cable connection
+- Ensure both halves have the same firmware

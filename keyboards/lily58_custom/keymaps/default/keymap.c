@@ -25,9 +25,13 @@ enum custom_keycodes {
 typedef union {
   uint32_t raw;
   struct {
-    bool hrm_disabled : 1;
+    bool    hrm_disabled    : 1;
+    uint8_t oled_brightness : 8;
   };
 } user_config_t;
+
+#define OLED_BRIGHTNESS_STEP 16
+#define OLED_BRIGHTNESS_MIN  8
 
 static user_config_t user_config;
 static bool hrm_enabled = true;
@@ -138,12 +142,19 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
 void eeconfig_init_user(void) {
   user_config.raw = 0;  // hrm_disabled = false, i.e. home row mods on
+  user_config.oled_brightness = OLED_BRIGHTNESS;
   eeconfig_update_user(user_config.raw);
 }
 
 void keyboard_post_init_user(void) {
   user_config.raw = eeconfig_read_user();
   hrm_enabled = !user_config.hrm_disabled;
+  // Guard against EEPROM written by an earlier build that had no brightness field,
+  // which would otherwise restore a fully dark display
+  if (user_config.oled_brightness < OLED_BRIGHTNESS_MIN) {
+    user_config.oled_brightness = OLED_BRIGHTNESS;
+  }
+  oled_set_brightness(user_config.oled_brightness);
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -214,7 +225,13 @@ static void render_mod_state(void) {
 static void render_status_line(void) {
     oled_write_P(host_keyboard_led_state().caps_lock ? PSTR("CAPS") : PSTR("    "), false);
     oled_write_P(PSTR("  Enc: "), false);
-    oled_write_ln_P(IS_LAYER_ON(_RAISE) ? PSTR("Brite") : PSTR("Vol/Pg"), false);
+    if (IS_LAYER_ON(_ADJUST)) {
+        oled_write_ln_P(PSTR("OLED"), false);
+    } else if (IS_LAYER_ON(_RAISE)) {
+        oled_write_ln_P(PSTR("Brite"), false);
+    } else {
+        oled_write_ln_P(PSTR("Vol/Pg"), false);
+    }
 }
 
 static void render_logo(void) {
@@ -242,7 +259,20 @@ bool oled_task_user(void) {
 
 #ifdef ENCODER_ENABLE
 bool encoder_update_user(uint8_t index, bool clockwise) {
-    if (IS_LAYER_ON(_RAISE)) {
+    // _ADJUST must be checked before _RAISE: tri-layer leaves both LOWER and
+    // RAISE on while ADJUST is active, so the RAISE branch would swallow it
+    if (IS_LAYER_ON(_ADJUST)) {
+        // Both encoders: OLED brightness, saved to EEPROM
+        uint8_t level = oled_get_brightness();
+        if (clockwise) {
+            level = (level > 255 - OLED_BRIGHTNESS_STEP) ? 255 : level + OLED_BRIGHTNESS_STEP;
+        } else {
+            level = (level < OLED_BRIGHTNESS_MIN + OLED_BRIGHTNESS_STEP) ? OLED_BRIGHTNESS_MIN : level - OLED_BRIGHTNESS_STEP;
+        }
+        oled_set_brightness(level);
+        user_config.oled_brightness = level;
+        eeconfig_update_user(user_config.raw);
+    } else if (IS_LAYER_ON(_RAISE)) {
         // Both encoders: Display brightness
         if (clockwise) {
             tap_code(KC_BRIU);

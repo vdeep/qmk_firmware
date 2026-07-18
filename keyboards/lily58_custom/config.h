@@ -15,13 +15,20 @@
 // OLED configuration
 #define OLED_DISPLAY_128X32
 #define OLED_TIMEOUT 30000
-#define OLED_BRIGHTNESS 128
+#define OLED_BRIGHTNESS 40   // Dim but readable indoors; raise toward 80 if hard to read
 
 // Split keyboard settings
 #define SPLIT_LED_STATE_ENABLE
 
 // Encoder resolution
 #define ENCODER_RESOLUTION 4
+
+// Home row mods (CAGS) tap-hold tuning
+#define TAPPING_TERM 200        // Raise if mods misfire as letters, lower if letters misfire as mods
+#define CHORDAL_HOLD            // Only settle as a hold when the next key is on the opposite hand
+#define PERMISSIVE_HOLD         // Opposite-hand nested press/release settles as hold before the term
+#define QUICK_TAP_TERM 0        // Tap-then-hold gives the mod, not an auto-repeated letter
+// #define FLOW_TAP_TERM 150    // Optional: suppress holds entirely while typing fast
 
 // Use the lily version to get the Lily58 logo instead of the qmk logo
 #define OLED_FONT_H "lib/glcdfont_lily.c"

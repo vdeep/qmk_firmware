@@ -1,4 +1,5 @@
 #include QMK_KEYBOARD_H
+#include "transactions.h"
 
 enum layer_number {
   _QWERTY = 0,
@@ -146,7 +147,39 @@ void eeconfig_init_user(void) {
   eeconfig_update_user(user_config.raw);
 }
 
+// oled_set_brightness() only affects the half it runs on, and the encoder handler
+// runs on the master. Push the level over to the slave so both displays match.
+static bool oled_brightness_dirty = true;
+
+static void user_sync_oled_brightness_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+  const uint8_t *level = (const uint8_t *)in_data;
+  oled_set_brightness(*level);
+}
+
+void housekeeping_task_user(void) {
+  if (!is_keyboard_master()) {
+    return;
+  }
+  static uint32_t last_sync    = 0;
+  static uint32_t last_refresh = 0;
+
+  // Periodic refresh so a slave that reset or reconnected picks the level back up
+  if (timer_elapsed32(last_refresh) > 5000) {
+    last_refresh           = timer_read32();
+    oled_brightness_dirty = true;
+  }
+
+  if (oled_brightness_dirty && timer_elapsed32(last_sync) > 100) {
+    last_sync      = timer_read32();
+    uint8_t level  = user_config.oled_brightness;
+    if (transaction_rpc_send(USER_SYNC_OLED_BRIGHTNESS, sizeof(level), &level)) {
+      oled_brightness_dirty = false;  // retried on the next tick if this failed
+    }
+  }
+}
+
 void keyboard_post_init_user(void) {
+  transaction_register_rpc(USER_SYNC_OLED_BRIGHTNESS, user_sync_oled_brightness_handler);
   user_config.raw = eeconfig_read_user();
   hrm_enabled = !user_config.hrm_disabled;
   // Guard against EEPROM written by an earlier build that had no brightness field,
@@ -271,6 +304,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         }
         oled_set_brightness(level);
         user_config.oled_brightness = level;
+        oled_brightness_dirty = true;  // housekeeping pushes it to the slave
         eeconfig_update_user(user_config.raw);
     } else if (IS_LAYER_ON(_RAISE)) {
         // Both encoders: Display brightness

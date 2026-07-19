@@ -19,6 +19,7 @@
 
 // Split keyboard settings
 #define SPLIT_LED_STATE_ENABLE
+#define SPLIT_TRANSACTION_IDS_USER USER_SYNC_OLED_BRIGHTNESS
 
 // Encoder resolution
 #define ENCODER_RESOLUTION 4

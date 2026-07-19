@@ -256,15 +256,15 @@ static void render_mod_state(void) {
 
 // Caps lock plus what the encoders are currently bound to
 static void render_status_line(void) {
-    oled_write_P(host_keyboard_led_state().caps_lock ? PSTR("CAPS") : PSTR("    "), false);
-    oled_write_P(PSTR("  Enc: "), false);
+    oled_write_P(PSTR("Enc:   "), false);
     if (IS_LAYER_ON(_ADJUST)) {
-        oled_write_ln_P(PSTR("OLED"), false);
+        oled_write_P(PSTR("OLED  "), false);
     } else if (IS_LAYER_ON(_RAISE)) {
-        oled_write_ln_P(PSTR("Brite"), false);
+        oled_write_P(PSTR("Brite "), false);
     } else {
-        oled_write_ln_P(PSTR("Vol/Pg"), false);
+        oled_write_P(PSTR("Vol/Pg"), false);
     }
+    oled_write_ln_P(host_keyboard_led_state().caps_lock ? PSTR(" CAPS") : PSTR("     "), false);
 }
 
 static void render_logo(void) {

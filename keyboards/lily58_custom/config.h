@@ -18,6 +18,10 @@
 #define OLED_BRIGHTNESS 40   // Dim but readable indoors; raise toward 80 if hard to read
 
 // Split keyboard settings
+// EE_HANDS reads handedness from EEPROM rather than assuming the USB half is the left
+// one, so either half can take the cable. Each half must be flashed once with
+// -bl uf2-split-left / uf2-split-right to write the flag; plain flashes work after that.
+#define EE_HANDS
 #define SPLIT_LED_STATE_ENABLE
 #define SPLIT_TRANSACTION_IDS_USER USER_SYNC_OLED_BRIGHTNESS
 

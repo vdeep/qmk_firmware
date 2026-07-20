@@ -16,23 +16,28 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   return rotation;
 }
 
+// Layer name padded to 9 so the caps indicator sits right-aligned. The line must stay
+// at 20 chars, not the full 21: oled_write_ln always advances a page, so a row-filling
+// line costs two rows and pushes the last line off a 4-row display.
 static void render_layer_state(void) {
+    oled_write_P(PSTR("Layer: "), false);
     switch (get_highest_layer(layer_state)) {
         case _QWERTY:
-            oled_write_ln_P(PSTR("Layer: Default"), false);
+            oled_write_P(PSTR("Default  "), false);
             break;
         case _LOWER:
-            oled_write_ln_P(PSTR("Layer: Lower"), false);
+            oled_write_P(PSTR("Lower    "), false);
             break;
         case _RAISE:
-            oled_write_ln_P(PSTR("Layer: Raise"), false);
+            oled_write_P(PSTR("Raise    "), false);
             break;
         case _ADJUST:
-            oled_write_ln_P(PSTR("Layer: Adjust"), false);
+            oled_write_P(PSTR("Adjust   "), false);
             break;
         default:
-            oled_write_ln_P(PSTR("Layer: ???"), false);
+            oled_write_P(PSTR("???      "), false);
     }
+    oled_write_ln_P(host_keyboard_led_state().caps_lock ? PSTR("CAPS") : PSTR("    "), false);
 }
 
 // Live modifier state, in the same CAGS order as the home row
@@ -45,17 +50,16 @@ static void render_mod_state(void) {
     oled_write_ln_P((mods & MOD_MASK_SHIFT) ? PSTR("S") : PSTR("-"), false);
 }
 
-// Caps lock plus what the encoders are currently bound to
+// What the encoders are currently bound to
 static void render_status_line(void) {
     oled_write_P(PSTR("Enc:   "), false);
     if (IS_LAYER_ON(_ADJUST)) {
-        oled_write_P(PSTR("OLED  "), false);
+        oled_write_ln_P(PSTR("OLED"), false);
     } else if (IS_LAYER_ON(_RAISE)) {
-        oled_write_P(PSTR("Brite "), false);
+        oled_write_ln_P(PSTR("Brite"), false);
     } else {
-        oled_write_P(PSTR("Vol/Pg"), false);
+        oled_write_ln_P(PSTR("Vol/Pg"), false);
     }
-    oled_write_ln_P(host_keyboard_led_state().caps_lock ? PSTR(" CAPS") : PSTR("     "), false);
 }
 
 static void render_logo(void) {

@@ -25,9 +25,6 @@
 #define SPLIT_LED_STATE_ENABLE
 #define SPLIT_TRANSACTION_IDS_USER USER_SYNC_OLED_BRIGHTNESS
 
-// Encoder resolution
-#define ENCODER_RESOLUTION 4
-
 // Home row mods (CAGS) tap-hold tuning
 #define TAPPING_TERM 200        // Raise if mods misfire as letters, lower if letters misfire as mods
 #define CHORDAL_HOLD            // Only settle as a hold when the next key is on the opposite hand

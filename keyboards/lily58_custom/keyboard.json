@@ -6,7 +6,7 @@
     "diode_direction": "COL2ROW",
     "encoder": {
         "rotary": [
-            {"pin_a": "GP29", "pin_b": "GP28"}
+            {"pin_a": "GP29", "pin_b": "GP28", "resolution": 4}
         ]
     },
     "features": {
@@ -22,12 +22,13 @@
         "rows": ["GP5", "GP6", "GP7", "GP8", "GP9"]
     },
     "processor": "RP2040",
+    "url": "https://github.com/vdeep/qmk_firmware",
     "split": {
         "enabled": true,
         "encoder": {
             "right": {
                 "rotary": [
-                    {"pin_a": "GP28", "pin_b": "GP29"}
+                    {"pin_a": "GP28", "pin_b": "GP29", "resolution": 4}
                 ]
             }
         },
@@ -38,7 +39,6 @@
         "transport": {
             "sync": {
                 "layer_state": true,
-                "matrix_state": true,
                 "oled": true
             }
         }

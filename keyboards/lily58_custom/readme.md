@@ -58,14 +58,31 @@ qmk compile -kb lily58_custom -km default
 
 ## Flashing
 
-1. Enter bootloader mode by double-tapping the reset button
-2. The RP2040 will appear as a USB drive (RPI-RP2)
-3. Copy the `.uf2` file to the drive
-4. Repeat for the other half
+This keymap uses `EE_HANDS`, so each half stores its own handedness in EEPROM rather
+than assuming the USB half is the left one. Either half can take the cable, but each
+must be flashed once with its handedness target to write that flag:
 
 ```bash
-qmk flash -kb lily58_custom -km default
+qmk flash -kb lily58_custom -km default -bl uf2-split-left    # left half in bootloader
+qmk flash -kb lily58_custom -km default -bl uf2-split-right   # right half in bootloader
 ```
+
+After that one-time step, plain `qmk flash -kb lily58_custom -km default` works for
+either half. `./build.sh --flash` walks both halves in order and prompts for each.
+
+To enter bootloader mode, double-tap reset on a half; it mounts as an `RPI-RP2` drive.
+Flashing is just a `.uf2` copy, so dragging the file onto that drive also works.
+
+### Recovering a bad EEPROM
+
+Bootmagic is deliberately disabled (`keyboard.json`). On RP2040 its EEPROM reset
+formats the whole wear-levelled region, which would erase the `EE_HANDS` handedness
+byte along with the stored home-row-mod toggle and OLED brightness — turning a stuck
+key at power-on into a silent handedness wipe.
+
+If the EEPROM ever does need clearing, flash `flash_nuke.uf2` to erase it, then
+re-flash both halves with the split-left/right targets above to restore handedness.
+`QK_BOOT` on the Adjust layer still reaches the bootloader for everyday flashing.
 
 ## Layers
 
@@ -77,22 +94,42 @@ Standard QWERTY layout with modifiers.
 - Numbers and symbols
 
 ### Raise
-- Navigation (arrows, page up/down, home/end)
-- Clipboard shortcuts
+- Numbers, F1-F12
+- Arrow keys on the right home row
+- Bracket and operator symbols
 
 ### Adjust (Lower + Raise)
-- QK_BOOT for entering bootloader
-- Media controls
+- `QK_BOOT` for entering bootloader
+- Caps Lock on Esc
+- Home row mod toggle (`HRM_TOGG`)
 
 ## Encoder Functions
 
-- **Left Encoder**: Volume Up/Down
-- **Right Encoder**: Page Down/Up
+Encoder behaviour depends on the active layer:
+
+| Layer | Left encoder | Right encoder |
+|-------|--------------|---------------|
+| Base | Volume Up/Down | Page Down/Up |
+| Raise | Display brightness | Display brightness |
+| Adjust | OLED brightness | OLED brightness |
+
+OLED brightness is saved to EEPROM and synced to the slave half over a split
+transaction, so both displays track together.
+
+Only the left encoder is populated. The right half's `pin_a`/`pin_b` are swapped
+relative to the left in `keyboard.json`, matching the convention upstream uses for
+`lily58/light` and `lily58/glow_enc` — the right PCB is mirrored, so the swap is what
+makes both encoders turn the same logical direction. Untested on hardware.
 
 ## OLED Display
 
-- **Master (left)**: Shows current layer, modifier status, and lock indicators
-- **Slave (right)**: Shows Lily58 logo
+- **Master**: four rows — layer (with a right-aligned `CAPS` indicator), home row mod
+  state, live modifiers, and the current encoder binding
+- **Slave**: Lily58 logo
+
+The display is 21 columns wide. No row may be a full 21 characters: `oled_write_ln`
+always advances a page, so a row-filling line consumes two rows and pushes the last
+line off the 4-row display. 20 is the usable maximum.
 
 ## Troubleshooting
 
